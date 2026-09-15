@@ -1,0 +1,9 @@
+{
+  "loja_id": "loja_demo",
+  "models": {
+    "Arroz Agulhinha Tipo 1 Camil 5kg": "modelo_arroz_agulhinha_tipo_1_camil_5kg.json",
+    "Feijão Carioca Tipo 1 Kicaldo 1kg": "modelo_feijao_carioca_tipo_1_kicaldo_1kg.json",
+    "Açúcar Refinado Amoroso Caravelas 1kg": "modelo_acucar_refinado_amoroso_caravelas_1kg.json",
+    "Café Pilão Tradicional 500g": "modelo_cafe_pilao_tradicional_500g.json"
+  }
+}

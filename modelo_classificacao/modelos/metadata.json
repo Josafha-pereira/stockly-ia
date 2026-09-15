@@ -1,0 +1,17 @@
+{
+  "features": [
+    "Temp",
+    "Humid (%)",
+    "CO2 (pmm)"
+  ],
+  "target": {
+    "Good": 0,
+    "Bad": 1
+  },
+  "models": {
+    "Banana": "xgb_banana.json",
+    "Orange": "xgb_orange.json",
+    "Pineapple": "xgb_pineapple.json",
+    "Tomato": "xgb_tomato.json"
+  }
+}

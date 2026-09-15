@@ -1,0 +1,119 @@
+services:
+  mongo:
+    image: mongo:7.0.41
+    container_name: nova_mongo
+    restart: unless-stopped
+
+    ports:
+      - "27017:27017"
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: gestao_projeto
+
+    volumes:
+      - mongo_data:/data/db
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--username",
+          "admin",
+          "--password",
+          "password",
+          "--authenticationDatabase",
+          "admin",
+          "--eval",
+          "db.adminCommand('ping')"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: nova_rabbitmq
+    restart: unless-stopped
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    environment:
+      RABBITMQ_DEFAULT_USER: nova
+      RABBITMQ_DEFAULT_PASS: nova_password
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "rabbitmq-diagnostics",
+          "-q",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  classificacao:
+    build:
+      context: ./modelo_classificacao
+
+    container_name: nova_classificacao
+    restart: unless-stopped
+
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    environment:
+      MONGO_URL: mongodb://admin:password@mongo:27017/gestao_projeto?authSource=admin
+      RABBITMQ_URL: amqp://nova:nova_password@rabbitmq:5672/%2F
+
+    volumes:
+      - ./modelo_classificacao/modelos:/app/modelos:ro
+
+
+  previsao:
+    build:
+      context: ./modelo_previsao
+
+    container_name: nova_previsao
+    restart: unless-stopped
+
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    environment:
+      MONGO_URL: mongodb://admin:password@mongo:27017/gestao_projeto?authSource=admin
+      RABBITMQ_URL: amqp://nova:nova_password@rabbitmq:5672/%2F
+
+    volumes:
+      - ./modelo_previsao/modelos:/app/modelos:ro
+
+
+volumes:
+  mongo_data:
+  rabbitmq_data:
