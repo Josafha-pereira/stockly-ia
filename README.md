@@ -62,11 +62,12 @@ stockly-ia/
 │
 ├── modelo_classificacao/
 │   ├── modelos/
+│   │   ├── metadata.json
 │   │   ├── xgb_banana.json
 │   │   ├── xgb_orange.json
 │   │   ├── xgb_pineapple.json
-│   │   ├── xgb_tomato.json
-│   │   └── metadata.json
+│   │   └── xgb_tomato.json
+│   │    
 │   ├── Dockerfile
 │   ├── main.py
 │   └── requirements.txt
@@ -76,11 +77,12 @@ stockly-ia/
 │   │   ├── loja_02/
 │   │   │   └── .gitkeep
 │   │   └── loja_demo/
+│   │       ├── metadata.json
 │   │       ├── modelo_acucar_refinado_amoroso_caravelas_1kg.json
 │   │       ├── modelo_arroz_agulhinha_tipo_1_camil_5kg.json
 │   │       ├── modelo_cafe_pilao_tradicional_500g.json
-│   │       ├── modelo_feijao_carioca_tipo_1_kicaldo_1kg.json
-│   │       └── metadata.json
+│   │       └── modelo_feijao_carioca_tipo_1_kicaldo_1kg.json
+│   │        
 │   ├── Dockerfile
 │   ├── main.py
 │   └── requirements.txt
@@ -108,7 +110,8 @@ stockly-ia/
 ├── .gitignore
 ├── docker-compose.yml
 ├── env.example
-└── README.md
+├── README.md
+└── requirements-notebooks.txt
 ```
 
 ## Organização dos modelos
@@ -171,7 +174,7 @@ Temp
 Humid (%)
 CO2 (pmm)
 ```
-Além disso, foi feito o treinamento  e a exportação de um classificador XGBoost para cada fruta.
+Além disso, foi feito o treinamento e a exportação de um classificador XGBoost para cada fruta. Os arquivos finais são salvos em `modelo_classificacao/modelos/`, onde são carregados pelo microserviço de classificação.
 
 ### Previsão de demanda
 
@@ -190,9 +193,9 @@ O dataset usado nesta demonstração é sintético e foi tratado como os dados d
 | Açúcar Refinado Amoroso Caravelas 1kg |
 | Café Pilão Tradicional 500g |
 
-A O treinamento do Prophet utiliza sazonalidade anual, sazonalidade semanal, tendência e intervalo de incerteza de 80%.
+O treinamento do Prophet utiliza sazonalidade anual, sazonalidade semanal, tendência e intervalo de incerteza de 80%.
 
-A avaliação foi feita com validação cruzada e horizonte de 365 dias. O serviço aceita uma faixa de tempo entre 1 e 365 dias. As datas previstas começam após o último dia presente na série usada no treinamento.
+A avaliação foi feita com validação cruzada e horizonte de 365 dias. O serviço aceita uma faixa de tempo entre 1 e 365 dias. As datas previstas começam após o último dia presente na série usada no treinamento. Os modelos finais da demonstração são salvos em `modelo_previsao/modelos/loja_demo/`, onde são carregados pelo microserviço de previsão.
 
 
 ## Tecnologias
@@ -215,7 +218,7 @@ A avaliação foi feita com validação cruzada e horizonte de 365 dias. O servi
 
 ### Pré-requisitos
 
-São necessários Docker, Docker Compose, Git e Python 3 para executar os scripts em localhost.
+São necessários Docker, Docker Compose, Git e Python 3. Para executar os notebooks localmente pelo VS Code, também são necessárias as extensões Python e Jupyter.
 
 Clone o repositório
 
@@ -289,32 +292,93 @@ Para encerrar e também apagar os volumes de dados salvos locais do MongoDB e Ra
 docker compose down -v
 ```
 
-## Ambiente para testes e scripts
+## Ambiente Python para notebooks, testes e scripts
 
-Os microserviços executam dentro do Docker. Os testes, benchmarks e o script de consulta são executados em um ambiente pelo Venv.
+Os microserviços executam dentro do Docker. Os notebooks de pesquisa, testes, benchmarks e o script de consulta podem ser executados no mesmo ambiente virtual local.
 
-Crie o ambiente virtual
+Crie o ambiente virtual na raiz do projeto
 
 ```bash
 python3 -m venv .venv
 ```
 
-Em Bash ou Zsh
+Em Bash ou Zsh:
 
 ```bash
 source .venv/bin/activate
 ```
 
-No Fish Shell
+No Fish Shell:
 
 ```fish
 source .venv/bin/activate.fish
 ```
 
-Instale as dependências
+Atualize o `pip`
 
 ```bash
-pip install pika==1.3.2 pymongo==4.6.1
+python -m pip install --upgrade pip
+```
+
+Instale as dependências usadas pelos notebooks
+
+```bash
+python -m pip install -r requirements-notebooks.txt
+```
+
+Para executar os testes, benchmarks e o script de consulta, instale também
+
+```bash
+python -m pip install pika==1.3.2 pymongo==4.6.1
+```
+
+### Executando os notebooks
+
+Os datasets usados na pesquisa já estão incluídos no repositório. Mantenha a estrutura de pastas, pois os notebooks utilizam caminhos relativos para acessá-los.
+
+Abra o projeto no VS Code
+
+```bash
+code .
+```
+
+Em cada notebook, selecione o interpretador da `.venv` como kernel do Jupyter e execute as células em ordem.
+
+Para a pesquisa de classificação, execute
+
+```text
+pesquisa_treinamento_classificacao/notebooks/nova_01_eda.ipynb
+pesquisa_treinamento_classificacao/notebooks/nova_02_modelagem.ipynb
+```
+
+Os dois notebooks utilizam
+
+```text
+pesquisa_treinamento_classificacao/dataset/dataset_frutas.csv
+```
+
+Ao final da modelagem, os classificadores e o `metadata.json` são exportados para
+
+```text
+modelo_classificacao/modelos/
+```
+
+Para a pesquisa de previsão, execute
+
+```text
+pesquisa_treinamento_previsao/notebook/nova_previsao.ipynb
+```
+
+O notebook utiliza
+
+```text
+pesquisa_treinamento_previsao/dataset/data_prev.csv
+```
+
+Ao final do treinamento, os modelos Prophet da loja demonstrativa são exportados para
+
+```text
+modelo_previsao/modelos/loja_demo/
 ```
 
 ## Testes de integração
@@ -495,7 +559,7 @@ Nesse benchmark, representa-se a quantidade de pontos diários de previsão gera
 
 Na classificação, uma nova loja pode usar os modelos XGBoost já carregados. O `loja_id` é enviado na mensagem e salvo junto com o resultado.
 
-Na previsão, para cada loja será feito seu próprio conjunto de modelos. O processo parte do histórico de vendas do ERP, passa pela análise e validação cruzada,treinamento dos modelos e termina com o salvamamento e integração ao sistema.
+Na previsão, para cada loja será feito seu próprio conjunto de modelos. O processo parte do histórico de vendas do ERP, passa pela análise e validação cruzada, treinamento dos modelos e termina com o salvamento e integração ao sistema.
 
 A estrutura segue este padrão
 
@@ -556,4 +620,4 @@ Além disso, a previsão mantém um modelo por loja e produto. Uma operação co
 
 ## Escopo
 
-Este repositório reúne os notebooks de pesquisa, os modelos treinados, os dois microserviços, a infraestrutura local com Docker, os testes de integração e os benchmarks da N.O.V.A.
+Esse repositório reúne os notebooks de pesquisa, os modelos treinados, os dois microserviços, a infraestrutura local com Docker, os testes de integração e os benchmarks da N.O.V.A.
