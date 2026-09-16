@@ -14,7 +14,7 @@ O projeto foi desenvolvido na disciplina Projetos de Engenharia 3.
 | Serviço | Modelo | Entrada principal | Resultado |
 | --- | --- | --- | --- |
 | Classificação | XGBoost | fruta, temperatura, umidade e CO2 | classe `bom` ou `ruim` e probabilidade de `ruim` |
-| Previsão | Prophet | loja, produto e horizonte | previsão diária com intervalo de incerteza de 80% |
+| Previsão | Prophet | loja, produto e horizonte de previsão | previsão diária com intervalo de incerteza de 80% |
 
 Os notebooks concentram a análise, a validação e o treinamento. Os microserviços carregam os modelos salvos em JSON e recebem as solicitações pelo RabbitMQ.
 
